@@ -384,7 +384,7 @@ export const registerUser = (userData) => {
 
 export const loginUser = (identifier, password) => {
   // Check for admin login
-  if (identifier === 'admin' && password === 'admin123') {
+  if (identifier === 'yori' && password === 'ediponsel88') {
     const adminUser = {
       id: 0,
       name: 'Administrator',
