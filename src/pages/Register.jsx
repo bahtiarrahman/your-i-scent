@@ -69,7 +69,6 @@ export default function Register() {
         {/* Logo */}
         <div className="text-center mb-6">
           <Link to="/" className="inline-flex items-center gap-2 text-2xl font-bold mb-2">
-            <span className="text-3xl">💐</span>
             <span>
               your.i <span className="text-primary-600">scent</span>
             </span>
@@ -152,7 +151,6 @@ export default function Register() {
               </>
             ) : (
               <>
-                <span>✨</span>
                 Daftar
               </>
             )}
