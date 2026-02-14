@@ -28,6 +28,9 @@ export default function Products() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState({
     name: '',
     brand: '',
@@ -36,6 +39,7 @@ export default function Products() {
     image: '',
     type: 'decant',
     price: 0,
+    quantity: 1,
     prices: {
       "2": 35000,
       "5": 75000,
@@ -131,6 +135,7 @@ export default function Products() {
       image: '',
       type: 'decant',
       price: 0,
+      quantity: 1,
       prices: {
         "2": 35000,
         "5": 75000,
@@ -152,6 +157,7 @@ export default function Products() {
       image: product.image,
       type: product.type || 'decant',
       price: product.price || 0,
+      quantity: product.quantity || 1,
       prices: product.prices || {
         "2": product.sizes?.find(s => s.size === 2)?.price || 35000,
         "5": product.sizes?.find(s => s.size === 5)?.price || 75000,
@@ -265,6 +271,25 @@ export default function Products() {
 
   if (!isLoggedIn) return null;
 
+  // Filter products based on search
+  const filteredProducts = products.filter(product => {
+    if (!searchTerm) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      product.name.toLowerCase().includes(search) ||
+      product.brand.toLowerCase().includes(search) ||
+      product.type.toLowerCase().includes(search)
+    );
+  });
+
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
@@ -280,6 +305,25 @@ export default function Products() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Search & Filter */}
+        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full sm:max-w-md">
+            <input
+              type="text"
+              placeholder="Cari produk..."
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              className="input-field pl-10 w-full"
+            />
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <p className="text-sm text-gray-500 whitespace-nowrap">
+            {filteredProducts.length} produk
+          </p>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-100">
@@ -289,11 +333,12 @@ export default function Products() {
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-600">Jenis</th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-600">Brand</th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-600">Harga</th>
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-600">Stok</th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-600">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {products.map(product => (
+              {currentProducts.map(product => (
                 <tr key={product.id} className="hover:bg-gray-50">
                   <td className="py-4 px-6">
                     <img src={product.image} alt={product.name} className="w-14 h-14 object-cover rounded-xl" />
@@ -313,6 +358,17 @@ export default function Products() {
                     <span className="font-semibold text-primary-600">
                       {getDisplayPrice(product)}
                     </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    {product.quantity > 0 ? (
+                      <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                        {product.quantity} pcs
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
+                        Habis
+                      </span>
+                    )}
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
@@ -336,12 +392,52 @@ export default function Products() {
           </table>
         </div>
 
-        {products.length === 0 && (
+        {filteredProducts.length === 0 && (
           <div className="p-12 text-center">
-            <p className="text-gray-500 mb-4">Belum ada produk</p>
+            <p className="text-gray-500 mb-4">Tidak ada produk yang ditemukan</p>
             <button onClick={openAddModal} className="btn-primary inline-block">
-              Tambah Produk Pertama
+              Tambah Produk Baru
             </button>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {filteredProducts.length > 0 && (
+          <div className="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-gray-500 order-2 sm:order-1">
+              Halaman {currentPage} dari {totalPages}
+            </p>
+            <div className="flex items-center gap-1 order-1 sm:order-2">
+              <button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                ← Prev
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+                <button
+                  key={number}
+                  onClick={() => paginate(number)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                    currentPage === number
+                      ? 'bg-primary-500 text-white'
+                      : 'border border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {number}
+                </button>
+              ))}
+
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Next →
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -548,6 +644,21 @@ export default function Products() {
                   />
                 </div>
               )}
+
+              {/* Stok Quantity */}
+              <div className="p-4 bg-green-50 rounded-xl">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Stok</label>
+                <input
+                  type="number"
+                  value={form.quantity}
+                  onChange={(e) => setForm({ ...form, quantity: parseInt(e.target.value) || 0 })}
+                  required
+                  min="0"
+                  placeholder="Jumlah stok..."
+                  className="input-field"
+                />
+                <p className="text-xs text-gray-500 mt-2">Jumlah stok produk yang tersedia</p>
+              </div>
 
               <div className="flex gap-4 pt-4">
                 <button

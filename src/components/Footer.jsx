@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MessageCircle, Instagram, Mail, Clock } from 'lucide-react';
-import { getPaymentSettings } from '../utils/storage';
 
 const STORE_INSTAGRAM = 'https://instagram.com/your.i_scent';
 const STORE_EMAIL = 'youriscent@gmail.com';
@@ -9,19 +8,8 @@ const STORE_LOCATION = 'Tambak Boyo, Sleman, DIY';
 const STORE_ADDRESS_PICKUP = '6CW6+783, Gg. Parikesit, Dero, Condongcatur, Kec. Depok, Kabupaten Sleman, DI Yogyakarta 55281';
 
 export default function Footer() {
-  const [whatsappAdmin, setWhatsappAdmin] = useState('6281349675235');
+  const whatsappAdmin = '6281349675235';
   const currentYear = new Date().getFullYear();
-
-  useEffect(() => {
-    try {
-      const settings = getPaymentSettings();
-      if (settings.whatsappAdmin) {
-        setWhatsappAdmin(settings.whatsappAdmin);
-      }
-    } catch (e) {
-      console.log('Using default WhatsApp number');
-    }
-  }, []);
 
   return (
     <footer className="bg-gray-900 text-white mt-auto">

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { MessageCircle, Instagram, Mail, MapPin, Clock, Home, Store, Map } from 'lucide-react';
-import { getPaymentSettings } from '../utils/storage';
 import { showSuccess } from '../utils/alerts';
 
 // Store constants
@@ -19,23 +18,12 @@ const OPERATING_HOURS = {
 };
 
 export default function Contact() {
-  const [whatsappAdmin, setWhatsappAdmin] = useState('6281349675235');
+  const whatsappAdmin = '6281349675235';
   const [form, setForm] = useState({
     name: '',
     email: '',
     message: ''
   });
-
-  useEffect(() => {
-    try {
-      const settings = getPaymentSettings();
-      if (settings.whatsappAdmin) {
-        setWhatsappAdmin(settings.whatsappAdmin);
-      }
-    } catch (e) {
-      console.log('Using default WhatsApp number');
-    }
-  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

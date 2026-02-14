@@ -24,15 +24,15 @@ export default function About() {
               Cerita Kami
             </h2>
             <p className="text-gray-600 leading-relaxed text-center max-w-2xl mx-auto mb-6">
-              your.i scent adalah toko parfum yang berlokasi di Tambak Boyo, Yogyakarta. 
+              Your.i Scent merupakan usaha parfum yang berlokasi di area Tambak Boyo, Sleman, DIY. 
               Kami menyediakan berbagai jenis parfum mulai dari decant untuk coba-coba, 
               preloved, hingga BNIB (Brand New In Box).
             </p>
+            <p className="text-gray-600 leading-relaxed text-center max-w-2xl mx-auto mb-6">
+              Kami percaya bahwa setiap aroma memiliki karakter, dan setiap individu berhak menemukan signature scent yang merepresentasikan dirinya.             
+              Melalui sistem decant, kami memberikan kesempatan bagi Anda untuk mengeksplorasi berbagai parfum berkualitas sebelum memutuskan untuk memiliki full bottle</p>
             <p className="text-gray-600 leading-relaxed text-center max-w-2xl mx-auto">
-              Kami percaya setiap orang berhak menemukan aroma yang sesuai dengan kepribadian mereka 
-              tanpa harus investasi besar. Dengan sistem decant, Anda bisa mencoba berbagai 
-              parfum berkualitas sebelum memutuskan untuk membeli full bottle.
-            </p>
+              Your.i Scent hadir sebagai ruang eksplorasi aroma — di mana kualitas, kepercayaan, dan pengalaman menjadi prioritas utama.</p>
           </div>
         </div>
       </section>

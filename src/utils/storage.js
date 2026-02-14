@@ -32,7 +32,8 @@ const initialProducts = [
       "2": 35000,
       "5": 75000,
       "10": 140000
-    }
+    },
+    quantity: 10
   },
   {
     id: 2,
@@ -46,7 +47,8 @@ const initialProducts = [
       "2": 45000,
       "5": 95000,
       "10": 180000
-    }
+    },
+    quantity: 8
   },
   {
     id: 3,
@@ -60,7 +62,8 @@ const initialProducts = [
       "2": 55000,
       "5": 115000,
       "10": 215000
-    }
+    },
+    quantity: 5
   },
   {
     id: 4,
@@ -74,7 +77,8 @@ const initialProducts = [
       "2": 40000,
       "5": 85000,
       "10": 160000
-    }
+    },
+    quantity: 12
   },
   {
     id: 5,
@@ -88,7 +92,8 @@ const initialProducts = [
       "2": 65000,
       "5": 135000,
       "10": 255000
-    }
+    },
+    quantity: 3
   },
   {
     id: 6,
@@ -102,7 +107,8 @@ const initialProducts = [
       "2": 50000,
       "5": 105000,
       "10": 195000
-    }
+    },
+    quantity: 7
   },
   // Preloved Products
   {
@@ -113,7 +119,8 @@ const initialProducts = [
     description: 'Parfum preloved kondisi 90% masih penuh. Aroma fresh citrus yang cocok untuk daily use.',
     image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400',
     type: 'preloved',
-    price: 350000
+    price: 350000,
+    quantity: 2
   },
   {
     id: 8,
@@ -123,7 +130,8 @@ const initialProducts = [
     description: 'Parfum preloved kondisi 85% masih penuh. Aroma floral yang elegant dan feminine.',
     image: 'https://images.unsplash.com/photo-1585232569525-f087bd9dae8e?w=400',
     type: 'preloved',
-    price: 400000
+    price: 400000,
+    quantity: 1
   },
   // BNIB Products
   {
@@ -134,7 +142,8 @@ const initialProducts = [
     description: 'BNIB - Brand New In Box. Parfum klasik pria dengan signature floral notes.',
     image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400',
     type: 'bnib',
-    price: 1650000
+    price: 1650000,
+    quantity: 4
   },
   {
     id: 10,
@@ -144,7 +153,8 @@ const initialProducts = [
     description: 'BNIB - Brand New In Box. Eau de Parfum dengan notes orange, patchouli, dan rose.',
     image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=400',
     type: 'bnib',
-    price: 2100000
+    price: 2100000,
+    quantity: 6
   }
 ];
 
@@ -268,10 +278,11 @@ export const getProducts = () => {
   const products = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
   if (products) {
     const parsedProducts = JSON.parse(products);
-    // Add notes fallback for existing products
+    // Add notes and quantity fallback for existing products
     return parsedProducts.map(p => ({
       ...p,
-      notes: p.notes || { top: '', middle: '', base: '' }
+      notes: p.notes || { top: '', middle: '', base: '' },
+      quantity: p.quantity !== undefined ? p.quantity : 1
     }));
   }
   return initialProducts;
@@ -384,7 +395,7 @@ export const registerUser = (userData) => {
 
 export const loginUser = (identifier, password) => {
   // Check for admin login
-  if (identifier === 'admin' && password === 'admin123') {
+  if (identifier === 'yori' && password === 'lemineral') {
     const adminUser = {
       id: 0,
       name: 'Administrator',
