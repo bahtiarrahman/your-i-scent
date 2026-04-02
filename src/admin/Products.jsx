@@ -120,7 +120,12 @@ export default function Products() {
         ...form, 
         type,
         price: 0,
-        prices: {}
+        prices: {},
+        notes: {
+          top: '',
+          middle: '',
+          base: ''
+        }
       });
     }
   };
@@ -140,6 +145,11 @@ export default function Products() {
         "2": 35000,
         "5": 75000,
         "10": 140000
+      },
+      notes: {
+        top: '',
+        middle: '',
+        base: ''
       }
     });
     setImagePreview('');
