@@ -11,7 +11,8 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState('bank');
   const [orderComplete, setOrderComplete] = useState(false);
   const [createdOrder, setCreatedOrder] = useState(null);
-  const [paymentSettings, setPaymentSettings] = useState({ bank: [], ewallet: [], whatsappAdmin: '' });
+  const [paymentSettings, setPaymentSettings] = useState({ bank: [], ewallet: [], whatsappAdmin: '', cities: [], ongkir: 0 });
+  const [selectedCity, setSelectedCity] = useState('');
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -67,7 +68,17 @@ export default function Checkout() {
   };
 
   const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const ongkir = getShippingCost();
+    return subtotal + ongkir;
+  };
+  
+  const getShippingCost = () => {
+    if (selectedCity && paymentSettings.cities) {
+      const city = paymentSettings.cities.find(c => c.id === selectedCity);
+      if (city) return parseInt(city.cost) || 0;
+    }
+    return 0;
   };
 
   const formatRupiah = (amount) => {
@@ -146,8 +157,13 @@ Saya akan kirim bukti transfer ya. Terima kasih`;
         phone: form.phone,
         address: form.address
       },
+      shipping: {
+        city: selectedCity,
+        ongkir: getShippingCost()
+      },
       items: cart,
       total: getTotalPrice(),
+      shippingCost: getShippingCost(),
       payment: paymentMethod,
       status: 'menunggu',
       date: new Date().toISOString()
@@ -386,8 +402,18 @@ Saya akan kirim bukti transfer ya. Terima kasih`;
                     <p className="font-semibold text-yellow-600">Rp {(item.price * item.quantity).toLocaleString('id-ID')}</p>
                   </div>
                 ))}
-                <div className="border-t border-gray-200 pt-4">
+                <div className="border-t border-gray-200 pt-4 space-y-2">
                   <div className="flex justify-between items-center">
+                    <p className="text-gray-600">Subtotal</p>
+                    <p className="text-gray-800">Rp {cart.reduce((t, i) => t + (i.price * i.quantity), 0).toLocaleString('id-ID')}</p>
+                  </div>
+                  {getShippingCost() > 0 && (
+                    <div className="flex justify-between items-center">
+                      <p className="text-gray-600">Ongkir</p>
+                      <p className="text-gray-800">Rp {getShippingCost().toLocaleString('id-ID')}</p>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                     <p className="font-bold text-gray-800">Total</p>
                     <p className="font-bold text-xl text-yellow-600">Rp {getTotalPrice().toLocaleString('id-ID')}</p>
                   </div>
@@ -432,7 +458,26 @@ Saya akan kirim bukti transfer ya. Terima kasih`;
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-gray-50"
                   />
                 </div>
-                <div>
+                
+                {paymentSettings.cities && paymentSettings.cities.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Kota Tujuan</label>
+                    <select
+                      value={selectedCity}
+                      onChange={(e) => setSelectedCity(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-gray-50"
+                    >
+                      <option value="">-- Pilih Kota --</option>
+                      {paymentSettings.cities.map(city => (
+                        <option key={city.id} value={city.id}>
+                          {city.name} - Rp {parseInt(city.cost || 0).toLocaleString('id-ID')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Alamat Lengkap</label>
                   <textarea
                     name="address"
@@ -443,6 +488,7 @@ Saya akan kirim bukti transfer ya. Terima kasih`;
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-gray-50 resize-none"
                   />
                 </div>
+                
                 <button
                   type="submit"
                   className="w-full py-3 bg-yellow-400 text-gray-800 rounded-xl font-semibold hover:bg-yellow-500 transition-colors"

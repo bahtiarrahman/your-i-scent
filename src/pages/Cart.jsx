@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatRupiah } from '../components/ProductCard';
 import { confirmAction, showSuccess, showInfo } from '../utils/alerts';
+import { useState, useEffect } from 'react';
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -153,7 +154,7 @@ export default function Cart() {
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>Ongkos Kirim</span>
-                <span className="text-green-600 font-medium">Gratis</span>
+                <span className="text-orange-500 text-sm">Hitung di checkout</span>
               </div>
             </div>
 
@@ -164,6 +165,7 @@ export default function Cart() {
                   {formatRupiah(total)}
                 </span>
               </div>
+              <p className="text-gray-500 text-sm mt-1">*Ongkir akan dihitung saat checkout</p>
             </div>
 
             <button

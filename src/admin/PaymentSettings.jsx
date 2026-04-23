@@ -6,7 +6,7 @@ import {
   isAdmin as checkIsAdmin
 } from '../utils/storage';
 import Swal from 'sweetalert2';
-import { Building2, Wallet, QrCode, Plus, Edit2, Trash2, Save, X } from 'lucide-react';
+import { Building2, Wallet, QrCode, Plus, Edit2, Trash2, Save, X, Truck } from 'lucide-react';
 
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
@@ -25,8 +25,16 @@ export default function PaymentSettings() {
     bank: [],
     ewallet: [],
     qris: { enabled: true, merchantName: '', image: null },
-    whatsappAdmin: ''
+    whatsappAdmin: '',
+    ongkir: 0,
+    cities: [],
+    freeShippingThreshold: 0
   });
+
+  const [ongkirForm, setOngkirForm] = useState(0);
+  const [freeShippingForm, setFreeShippingForm] = useState(0);
+  const [cityForm, setCityForm] = useState({ name: '', cost: 0 });
+  const [editingCityId, setEditingCityId] = useState(null);
 
   const [bankForm, setBankForm] = useState({ name: '', accountNumber: '', accountName: '' });
   const [editingBankId, setEditingBankId] = useState(null);
@@ -62,6 +70,13 @@ export default function PaymentSettings() {
     });
     setQrisPreview(data.qris?.image ?? '');
     setWhatsappForm(data.whatsappAdmin ?? '');
+    setOngkirForm(data.ongkir ?? 0);
+    setFreeShippingForm(data.freeShippingThreshold ?? 0);
+    // Ensure cities array exists
+    if (!data.cities) {
+      data.cities = [];
+      savePaymentSettings(data);
+    }
   };
 
   const handleAddBank = async () => {
@@ -284,6 +299,151 @@ export default function PaymentSettings() {
     });
   };
 
+  const handleSaveOngkir = async () => {
+    const ongkirValue = parseInt(ongkirForm) || 0;
+    if (ongkirValue < 0) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Data Tidak Valid',
+        text: 'Ongkos kirim tidak boleh negatif!'
+      });
+      return;
+    }
+    const data = getPaymentSettings();
+    data.ongkir = ongkirValue;
+    savePaymentSettings(data);
+    loadSettings();
+    await Swal.fire({
+      icon: 'success',
+      title: 'Berhasil',
+      text: 'Ongkos kirim berhasil disimpan!'
+    });
+  };
+
+  const handleSaveFreeShipping = async () => {
+    const thresholdValue = parseInt(freeShippingForm) || 0;
+    if (thresholdValue < 0) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Data Tidak Valid',
+        text: 'Batas gratis ongkir tidak boleh negatif!'
+      });
+      return;
+    }
+    const data = getPaymentSettings();
+    data.freeShippingThreshold = thresholdValue;
+    savePaymentSettings(data);
+    loadSettings();
+    await Swal.fire({
+      icon: 'success',
+      title: 'Berhasil',
+      text: 'Batas gratis ongkir berhasil disimpan!'
+    });
+  };
+
+  const handleAddCity = async () => {
+    console.log('Adding city:', cityForm);
+    
+    if (!cityForm.name) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Data Tidak Lengkap',
+        text: 'Nama kota harus diisi!'
+      });
+      return;
+    }
+    
+    const costValue = parseInt(cityForm.cost) || 0;
+    if (costValue < 0) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Data Tidak Valid',
+        text: 'Ongkir tidak boleh negatif!'
+      });
+      return;
+    }
+    
+    const data = getPaymentSettings();
+    
+    // Ensure cities array exists
+    if (!data.cities) {
+      data.cities = [];
+    }
+    
+    const newCity = {
+      id: `city_${Date.now()}`,
+      name: cityForm.name,
+      cost: costValue
+    };
+    
+    console.log('New city data:', newCity);
+    console.log('Current settings:', data);
+    
+    data.cities.push(newCity);
+    savePaymentSettings(data);
+    setCityForm({ name: '', cost: 0 });
+    loadSettings();
+    await Swal.fire({
+      icon: 'success',
+      title: 'Berhasil',
+      text: 'Kota berhasil ditambahkan!'
+    });
+  };
+
+  const handleEditCity = (city) => {
+    setCityForm({ name: city.name, cost: city.cost });
+    setEditingCityId(city.id);
+  };
+
+  const handleUpdateCity = async () => {
+    if (!cityForm.name || cityForm.cost < 0) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Data Tidak Lengkap',
+        text: 'Nama kota dan biaya ongkir harus diisi!'
+      });
+      return;
+    }
+    const data = getPaymentSettings();
+    const index = data.cities.findIndex(c => c.id === editingCityId);
+    if (index !== -1) {
+      data.cities[index] = { ...data.cities[index], name: cityForm.name, cost: parseInt(cityForm.cost) };
+      savePaymentSettings(data);
+    }
+    setCityForm({ name: '', cost: 0 });
+    setEditingCityId(null);
+    loadSettings();
+    await Swal.fire({
+      icon: 'success',
+      title: 'Berhasil',
+      text: 'Kota berhasil diperbarui!'
+    });
+  };
+
+  const handleDeleteCity = async (id, name) => {
+    const result = await Swal.fire({
+      title: 'Hapus Kota?',
+      text: `${name} akan dihapus dari daftar kota.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal'
+    });
+    if (result.isConfirmed) {
+      const data = getPaymentSettings();
+      data.cities = data.cities.filter(c => c.id !== id);
+      savePaymentSettings(data);
+      loadSettings();
+      await Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: 'Kota berhasil dihapus!'
+      });
+    }
+  };
+
   const cancelEdit = () => {
     setBankForm({ name: '', accountNumber: '', accountName: '' });
     setEditingBankId(null);
@@ -296,6 +456,7 @@ export default function PaymentSettings() {
   const tabs = [
     { id: 'bank', label: 'Bank Transfer', icon: Building2 },
     { id: 'ewallet', label: 'E-Wallet', icon: Wallet },
+    { id: 'ongkir', label: 'Ongkos Kirim', icon: Truck },
     { id: 'qris', label: 'QRIS & WhatsApp', icon: QrCode }
   ];
 
@@ -529,6 +690,151 @@ export default function PaymentSettings() {
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'ongkir' && (
+        <div className="space-y-6">
+          {/* Free Shipping Threshold */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-800">Gratis Ongkir</h2>
+              <p className="text-gray-500 text-sm mt-1">Batas minimal belanja untuk gratis ongkir</p>
+            </div>
+
+            <div className="p-6 bg-yellow-50/50">
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+                <div className="flex-1 w-full">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Minimal Belanja (Rp)
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={freeShippingForm}
+                    onChange={(e) => setFreeShippingForm(e.target.value)}
+                    min="0"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 outline-none transition-all"
+                  />
+                  <p className="text-gray-500 text-sm mt-2">
+                    Set 0 jika tidak ingin gunakan fitur gratis ongkir
+                  </p>
+                </div>
+                <button
+                  onClick={handleSaveFreeShipping}
+                  className="flex items-center gap-2 px-6 py-3 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 transition-colors whitespace-nowrap"
+                >
+                  <Save className="w-4 h-4" />
+                  Simpan
+                </button>
+              </div>
+
+              {freeShippingForm > 0 && (
+                <div className="mt-4 p-4 bg-green-50 rounded-xl border border-green-200">
+                  <p className="text-green-700 font-medium">
+                    🎉 Gratis ongkir untuk pesanan di atas Rp {parseInt(freeShippingForm).toLocaleString('id-ID')}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* City List */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-800">Kelola Kota</h2>
+              <p className="text-gray-500 text-sm mt-1">Tambah, edit, atau hapus kota dan ongkir per kota</p>
+            </div>
+
+            <div className="p-6 bg-yellow-50/50">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input
+                  type="text"
+                  placeholder="Nama Kota"
+                  value={cityForm.name}
+                  onChange={(e) => setCityForm({ ...cityForm, name: e.target.value })}
+                  className="px-4 py-3 rounded-xl border border-gray-200 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 outline-none transition-all"
+                />
+                <input
+                  type="number"
+                  placeholder="Ongkir (Rp)"
+                  value={cityForm.cost}
+                  onChange={(e) => setCityForm({ ...cityForm, cost: e.target.value })}
+                  min="0"
+                  className="px-4 py-3 rounded-xl border border-gray-200 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 outline-none transition-all"
+                />
+                {editingCityId ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleUpdateCity}
+                      className="flex items-center gap-2 px-6 py-3 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 transition-colors"
+                    >
+                      <Save className="w-4 h-4" />
+                      Simpan
+                    </button>
+                    <button
+                      onClick={() => { setEditingCityId(null); setCityForm({ name: '', cost: 0 }); }}
+                      className="flex items-center gap-2 px-4 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleAddCity}
+                    className="flex items-center gap-2 px-6 py-3 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Tambah Kota
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="divide-y divide-gray-100">
+              {(!settings.cities || settings.cities.length === 0) ? (
+                <div className="p-12 text-center">
+                  <Truck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">Belum ada kota ditambahkan</p>
+                  <p className="text-gray-400 text-sm">Tambahkan kota untuk ongkir per wilayah</p>
+                </div>
+              ) : (
+                settings.cities.map((city) => (
+                  <div key={city.id} className="p-4 hover:bg-yellow-50/50 transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                          <Truck className="w-6 h-6 text-yellow-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-800">{city.name}</p>
+                          <p className="text-gray-500 text-sm">
+                            Ongkir: Rp {parseInt(city.cost).toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditCity(city)}
+                          className="flex items-center gap-1 px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCity(city.id, city.name)}
+                          className="flex items-center gap-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}

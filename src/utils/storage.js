@@ -145,17 +145,6 @@ const initialProducts = [
     price: 1650000,
     quantity: 4
   },
-  {
-    id: 10,
-    name: 'Chanel Coco Mademoiselle',
-    brand: 'Chanel',
-    categoryId: 2,
-    description: 'BNIB - Brand New In Box. Eau de Parfum dengan notes orange, patchouli, dan rose.',
-    image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=400',
-    type: 'bnib',
-    price: 2100000,
-    quantity: 6
-  }
 ];
 
 // Initialize storage with default data

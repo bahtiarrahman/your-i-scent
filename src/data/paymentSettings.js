@@ -24,5 +24,8 @@ export const defaultPaymentSettings = {
     merchantName: 'Your.i Scent',
     image: null
   },
-  whatsappAdmin: '6281234567890'
+  whatsappAdmin: '6281234567890',
+  ongkir: 0,
+  cities: [],
+  freeShippingThreshold: 0
 };
