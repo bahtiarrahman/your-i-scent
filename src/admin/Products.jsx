@@ -423,7 +423,7 @@ export default function Products() {
                 disabled={currentPage === 1}
                 className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                ← Prev
+                ← Sebelumnya
               </button>
               
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
@@ -445,7 +445,7 @@ export default function Products() {
                 disabled={currentPage === totalPages}
                 className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                Next →
+                Berikutnya →
               </button>
             </div>
           </div>

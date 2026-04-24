@@ -10,6 +10,12 @@ export default function Account() {
   const currentUser = getCurrentUser();
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 5;
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(orders.length / ordersPerPage);
+  const paginatedOrders = orders.slice((currentPage - 1) * ordersPerPage, currentPage * ordersPerPage);
 
   useEffect(() => {
     if (!isLoggedIn()) {

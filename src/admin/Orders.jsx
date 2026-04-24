@@ -18,6 +18,8 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [filter, setFilter] = useState('semua');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const adminData = checkIsAdmin();
@@ -161,6 +163,24 @@ export default function Orders() {
     ? orders 
     : orders.filter(o => o.status === filter);
 
+  // Pagination
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentOrders = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Reset ke halaman 1 saat filter berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
+
   if (!isLoggedIn) return null;
 
   return (
@@ -216,7 +236,7 @@ export default function Orders() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredOrders.map(order => {
+                {currentOrders.map(order => {
                   const statusInfo = getStatusInfo(order.status);
                   return (
                     <tr key={order.id} className="hover:bg-gray-50">
@@ -281,6 +301,68 @@ export default function Orders() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages >= 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              currentPage === 1
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white text-gray-600 hover:bg-primary-50 border border-gray-200'
+            }`}
+          >
+            ← Sebelumnya
+          </button>
+          
+          <div className="flex gap-1">
+            {[...Array(totalPages)].map((_, index) => {
+              const page = index + 1;
+              const isActive = page === currentPage;
+              const showPage = 
+                page === 1 || 
+                page === totalPages || 
+                (page >= currentPage - 1 && page <= currentPage + 1);
+              
+              if (!showPage && page === currentPage - 2) {
+                return <span key={page} className="px-2 py-2 text-gray-400">...</span>;
+              }
+              if (!showPage && page === currentPage + 2) {
+                return <span key={page} className="px-2 py-2 text-gray-400">...</span>;
+              }
+              if (!showPage) return null;
+              
+              return (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    isActive
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-white text-gray-600 hover:bg-primary-50 border border-gray-200'
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              currentPage === totalPages
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white text-gray-600 hover:bg-primary-50 border border-gray-200'
+            }`}
+          >
+            Berikutnya →
+          </button>
+        </div>
+      )}
     </div>
   );
 }

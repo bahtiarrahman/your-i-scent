@@ -570,6 +570,7 @@ Password: admin123
 2. **Single Admin** - Tidak support multi-admin
 3. **Tanpa Payment Gateway** - Konfirmasi manual via WhatsApp
 4. **Limitasi Storage** - LocalStorage max 5MB
+5. **Ongkir Manual** - Admin input kota + ongkir di Payment Settings
 
 ### 13.3 Saran Pengembangan
 
@@ -579,6 +580,36 @@ Password: admin123
 4. **Image Upload** - Cloudinary/AWS S3
 5. **Real-time Sync** - WebSocket untuk update status
 6. **Analytics** - Google Analytics
+7. **Raja Ongkir API** - Untuk ongkir otomatis (perlu backend proxy)
+
+## BAB XIV: UPDATE (April 2026)
+
+### 14.1 FiturCheckout dengan Ongkir Manual
+
+- Admin tambah kota di **Payment Settings → Kota Pengiriman**
+- User pilih kota di checkout → ongkir otomatis masuk
+- Urutan: Kota Tujuan → Alamat Lengkap
+
+### 14.2 Proteksi Admin
+
+- Admin redirect ke /admin jika akses checkout
+- Login: admin@youriscent.com
+
+### 14.3 File Structure
+
+```
+src/
+├── pages/
+│   ├── Checkout.jsx    (checkout dengan ongkir manual)
+│   ├── Cart.jsx
+│   └── Login.jsx
+├── admin/
+│   └── PaymentSettings.jsx  (input kota+ongkir)
+├── utils/
+│   └── storage.js    (localStorage)
+└── data/
+    └── paymentSettings.js
+```
 
 ---
 

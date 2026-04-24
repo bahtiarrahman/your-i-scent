@@ -30,6 +30,12 @@ export default function Checkout() {
       return;
     }
 
+    // Prevent admin from checkout
+    if (user.role === 'admin') {
+      navigate('/admin');
+      return;
+    }
+
     const cartData = getCart();
     if (cartData.length === 0) {
       showWarning('Keranjang Anda kosong!');
