@@ -31,6 +31,7 @@ export default function Products() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('semua');
   const [form, setForm] = useState({
     name: '',
     brand: '',
@@ -205,6 +206,20 @@ export default function Products() {
       }
     }
 
+    // Validasi produk duplikat (nama + brand + jenis sama)
+    const isDuplicate = products.some(p => {
+      if (editingProduct && p.id === editingProduct.id) return false;
+      const sameName = p.name.toLowerCase().trim() === form.name.toLowerCase().trim();
+      const sameBrand = p.brand.toLowerCase().trim() === form.brand.toLowerCase().trim();
+      const sameType = p.type === form.type;
+      return sameName && sameBrand && sameType;
+    });
+
+    if (isDuplicate) {
+      await showWarning(`Produk ${form.name} (${form.brand}) dengan jenis ${form.type} sudah ada! Tidak boleh ada data duplikat.`);
+      return;
+    }
+
     let newProducts = [...products];
 
     const productData = {
@@ -281,10 +296,14 @@ export default function Products() {
 
   if (!isLoggedIn) return null;
 
-  // Filter products based on search
+  // Filter products based on search and type
   const filteredProducts = products.filter(product => {
-    if (!searchTerm) return true;
+    if (!searchTerm) {
+      if (filterType === 'semua') return true;
+      return product.type === filterType;
+    }
     const search = searchTerm.toLowerCase();
+    if (filterType !== 'semua' && product.type !== filterType) return false;
     return (
       product.name.toLowerCase().includes(search) ||
       product.brand.toLowerCase().includes(search) ||
@@ -317,17 +336,29 @@ export default function Products() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {/* Search & Filter */}
         <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full sm:max-w-md">
-            <input
-              type="text"
-              placeholder="Cari produk..."
-              value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              className="input-field pl-10 w-full"
-            />
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <div className="relative w-full sm:max-w-md">
+              <input
+                type="text"
+                placeholder="Cari produk..."
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                className="input-field pl-10 w-full"
+              />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <select
+              value={filterType}
+              onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }}
+              className="input-field w-full sm:w-40"
+            >
+              <option value="semua">Semua Jenis</option>
+              {PRODUCT_TYPES.map(type => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
+            </select>
           </div>
           <p className="text-sm text-gray-500 whitespace-nowrap">
             {filteredProducts.length} produk
