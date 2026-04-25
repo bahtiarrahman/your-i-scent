@@ -8,7 +8,8 @@ const STORAGE_KEYS = {
   CART: 'perfume_cart',
   USERS: 'perfume_users',
   CURRENT_USER: 'perfume_current_user',
-  PAYMENT_SETTINGS: 'perfume_payment_settings'
+  PAYMENT_SETTINGS: 'perfume_payment_settings',
+  BRANDS: 'perfume_brands'
 };
 
 // Initial data
@@ -16,6 +17,17 @@ const initialCategories = [
   { id: 1, name: 'Pria' },
   { id: 2, name: 'Wanita' },
   { id: 3, name: 'Unisex' }
+];
+
+const initialBrands = [
+  { id: 1, name: 'Dior' },
+  { id: 2, name: 'Chanel' },
+  { id: 3, name: 'Tom Ford' },
+  { id: 4, name: 'Versace' },
+  { id: 5, name: 'Gucci' },
+  { id: 6, name: 'Yves Saint Laurent' },
+  { id: 7, name: 'Jo Malone' },
+  { id: 8, name: 'Calvin Klein' }
 ];
 
 const initialProducts = [
@@ -151,6 +163,9 @@ const initialProducts = [
 export const initStorage = () => {
   if (!localStorage.getItem(STORAGE_KEYS.CATEGORIES)) {
     localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(initialCategories));
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.BRANDS)) {
+    localStorage.setItem(STORAGE_KEYS.BRANDS, JSON.stringify(initialBrands));
   }
   if (!localStorage.getItem(STORAGE_KEYS.PRODUCTS)) {
     localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(initialProducts));
@@ -345,6 +360,41 @@ export const deleteOrder = (orderId) => {
   const filteredOrders = orders.filter(order => order.id !== orderId);
   localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(filteredOrders));
   return filteredOrders;
+};
+
+// Brands Management
+export const getBrands = () => {
+  const brands = localStorage.getItem(STORAGE_KEYS.BRANDS);
+  return brands ? JSON.parse(brands) : [];
+};
+
+export const addBrand = (brandData) => {
+  const brands = getBrands();
+  const newBrand = {
+    id: Date.now(),
+    ...brandData
+  };
+  brands.push(newBrand);
+  localStorage.setItem(STORAGE_KEYS.BRANDS, JSON.stringify(brands));
+  return newBrand;
+};
+
+export const updateBrand = (id, updates) => {
+  const brands = getBrands();
+  const index = brands.findIndex(b => b.id === id);
+  if (index !== -1) {
+    brands[index] = { ...brands[index], ...updates };
+    localStorage.setItem(STORAGE_KEYS.BRANDS, JSON.stringify(brands));
+    return brands[index];
+  }
+  throw new Error('Brand tidak ditemukan');
+};
+
+export const deleteBrand = (id) => {
+  const brands = getBrands();
+  const filteredBrands = brands.filter(b => b.id !== id);
+  localStorage.setItem(STORAGE_KEYS.BRANDS, JSON.stringify(filteredBrands));
+  return filteredBrands;
 };
 
 // Cart

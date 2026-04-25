@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getProducts, getCategories, saveProducts, isAdmin as checkIsAdmin } from '../utils/storage';
+import { getProducts, getCategories, getBrands, saveProducts, isAdmin as checkIsAdmin } from '../utils/storage';
 import { formatRupiah } from '../components/ProductCard';
 import { confirmAction, showSuccess, showInfo, showError, showWarning } from '../utils/alerts';
 
@@ -23,6 +23,7 @@ export default function Products() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -68,7 +69,12 @@ export default function Products() {
 
   const loadData = () => {
     setProducts(getProducts());
-    setCategories(getCategories());
+
+    const cat = getCategories();
+    const brand = getBrands();
+
+    setCategories(cat || []);
+    setBrands(brand || []);
   };
 
   const handleImageUpload = async (e) => {
@@ -544,14 +550,19 @@ export default function Products() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-                  <input
-                    type="text"
+                  <select
                     value={form.brand}
                     onChange={(e) => setForm({ ...form, brand: e.target.value })}
                     required
-                    placeholder="Contoh: Dior"
                     className="input-field"
-                  />
+                  >
+                    <option value="">Pilih Brand</option>
+                    {brands.map((b) => (
+                      <option key={b.id} value={b.name}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -571,7 +582,7 @@ export default function Products() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
                 <select
-                  value={form.categoryId}
+                  value={Number(form.categoryId)}
                   onChange={(e) => setForm({ ...form, categoryId: parseInt(e.target.value) })}
                   className="input-field"
                 >
