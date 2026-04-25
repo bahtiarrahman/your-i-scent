@@ -34,8 +34,8 @@ const initialProducts = [
   // Decant Products
   {
     id: 1,
-    name: 'Dior Sauvage',
-    brand: 'Dior',
+    name: 'Demeter',
+    brand: 'Velixir',
     categoryId: 1,
     description: 'Parfum iconic dengan aroma segar dan maskulin. Cocok untuk pria modern.',
     image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400',
@@ -108,57 +108,7 @@ const initialProducts = [
     quantity: 3
   },
   {
-    id: 6,
-    name: 'Jo Malone Wood Sage & Sea Salt',
-    brand: 'Jo Malone',
-    categoryId: 3,
-    description: 'Fresh dan clean dengan notes sea salt dan sage. Sangat versatile.',
-    image: 'https://images.unsplash.com/photo-1595425970339-27414395c085?w=400',
-    type: 'decant',
-    prices: {
-      "2": 50000,
-      "5": 105000,
-      "10": 195000
-    },
-    quantity: 7
-  },
-  // Preloved Products
-  {
-    id: 7,
-    name: 'Versace Dylan Blue',
-    brand: 'Versace',
-    categoryId: 1,
-    description: 'Parfum preloved kondisi 90% masih penuh. Aroma fresh citrus yang cocok untuk daily use.',
-    image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400',
-    type: 'preloved',
-    price: 350000,
-    quantity: 2
-  },
-  {
-    id: 8,
-    name: 'Gucci Bloom',
-    brand: 'Gucci',
-    categoryId: 2,
-    description: 'Parfum preloved kondisi 85% masih penuh. Aroma floral yang elegant dan feminine.',
-    image: 'https://images.unsplash.com/photo-1585232569525-f087bd9dae8e?w=400',
-    type: 'preloved',
-    price: 400000,
-    quantity: 1
-  },
-  // BNIB Products
-  {
-    id: 9,
-    name: 'Dior Fahrenheit',
-    brand: 'Dior',
-    categoryId: 1,
-    description: 'BNIB - Brand New In Box. Parfum klasik pria dengan signature floral notes.',
-    image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400',
-    type: 'bnib',
-    price: 1650000,
-    quantity: 4
-  },
-  {
-    id: 100,
+    id: 3,
     name: 'Sorrento',
     brand: 'Mykonos',
     categoryId: 1,
@@ -305,11 +255,12 @@ export const getProducts = () => {
   const products = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
   if (products) {
     const parsedProducts = JSON.parse(products);
-    // Add notes and quantity fallback for existing products
+    // Add notes, quantity and stock fallback for existing products
     return parsedProducts.map(p => ({
       ...p,
       notes: p.notes || { top: '', middle: '', base: '' },
-      quantity: p.quantity !== undefined ? p.quantity : 1
+      quantity: p.quantity !== undefined ? p.quantity : 1,
+      stock: p.stock || { "2": 1, "5": 1, "10": 1 }
     }));
   }
   return initialProducts;
