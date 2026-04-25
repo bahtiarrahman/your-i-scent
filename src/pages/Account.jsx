@@ -222,17 +222,6 @@ export default function Account() {
                 Logout
               </button>
 
-              <div className="mt-6 pt-6 border-t border-gray-100">
-                <Link to="/" className="block text-gray-600 hover:text-primary-600 py-2">
-                  Kembali ke Beranda
-                </Link>
-                <Link to="/catalog" className="block text-gray-600 hover:text-primary-600 py-2">
-                  Lihat Katalog
-                </Link>
-                <Link to="/cart" className="block text-gray-600 hover:text-primary-600 py-2">
-                  Lihat Keranjang
-                </Link>
-              </div>
             </div>
           </div>
 

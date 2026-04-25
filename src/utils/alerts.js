@@ -67,6 +67,15 @@ export const showSuccessHtml = async (title, html, confirmText = 'Oke') => {
 };
 
 // Error notification
+export const showErrorNotification = (message) => {
+  return Swal.fire({
+    icon: 'error',
+    title: 'Gagal',
+    text: message,
+    ...swalConfig
+  });
+};
+
 export const showError = async (message, title = 'Gagal!') => {
   await Swal.fire({
     icon: 'error',

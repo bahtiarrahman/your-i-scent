@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getCart, saveCart } from '../utils/storage';
+import { showErrorNotification, showSuccess } from '../utils/alerts';
 
 const CartContext = createContext();
 
@@ -28,7 +29,23 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = (product, size, quantity = 1, price = null) => {
     setCart(prevCart => {
-      // For non-decant products, size is null, so we match by productId only
+      // Stock validation for products with stock per size
+      if (product.type === 'decant' && size && product.stock) {
+        const currentStock = product.stock[size] || 0;
+        if (currentStock <= 0) {
+          showErrorNotification(`Stok ${size}ml kosong!`);
+          return prevCart;
+        }
+        const existingItem = prevCart.find(item => item.productId === product.id && item.size === size);
+        const cartQty = existingItem ? existingItem.quantity : 0;
+        
+        if (cartQty + quantity > currentStock) {
+          showErrorNotification(`Stok ${size}ml tidak mencukupi! Tersedia: ${currentStock}`);
+          return prevCart;
+        }
+      }
+
+      // Find existing item
       const existingItem = size 
         ? prevCart.find(item => item.productId === product.id && item.size === size)
         : prevCart.find(item => item.productId === product.id);
@@ -47,12 +64,11 @@ export const CartProvider = ({ children }) => {
         });
       }
 
-      // Calculate price for decant or non-decant
+      // Calculate price
       let itemPrice;
       if (price !== null) {
         itemPrice = price;
       } else if (size) {
-        // Support both new (prices object) and old (sizes array) formats
         const prices = product.prices || {};
         const sizesArray = product.sizes || [];
         itemPrice = prices[String(size)] || sizesArray.find(s => s.size === size)?.price || 0;
