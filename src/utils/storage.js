@@ -161,9 +161,21 @@ export const initStorage = () => {
   if (!localStorage.getItem(STORAGE_KEYS.CART)) {
     localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify([]));
   }
+  
+  // Default test user
   if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([]));
+    const defaultUsers = [
+      {
+        id: 1,
+        name: 'Demo User',
+        email: 'demo@example.com',
+        password: 'demo123',
+        createdAt: new Date().toISOString()
+      }
+    ];
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(defaultUsers));
   }
+  
   if (!localStorage.getItem(STORAGE_KEYS.CURRENT_USER)) {
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(null));
   }
@@ -393,6 +405,18 @@ export const loginUser = (identifier, password) => {
     };
     setCurrentUser(adminUser);
     return { success: true, role: 'admin', user: adminUser };
+  }
+
+  // Check for demo user login
+  if (identifier === 'demo' && password === 'demo123') {
+    const demoUser = {
+      id: 1,
+      name: 'Demo User',
+      email: 'demo@example.com',
+      role: 'user'
+    };
+    setCurrentUser(demoUser);
+    return { success: true, role: 'user', user: demoUser };
   }
 
   // Check regular users
