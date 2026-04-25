@@ -36,7 +36,7 @@ const initialProducts = [
     id: 1,
     name: 'Demeter',
     brand: 'Velixir',
-    categoryId: 1,
+    categoryId: 2,
     description: 'Parfum iconic dengan aroma segar dan maskulin. Cocok untuk pria modern.',
     image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400',
     type: 'decant',
