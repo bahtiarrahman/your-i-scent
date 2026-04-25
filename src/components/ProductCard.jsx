@@ -63,6 +63,9 @@ export default function ProductCard({ product }) {
           src={product.image}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400';
+          }}
         />
         {/* Category Badge */}
         <span className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-gray-700 shadow-sm flex items-center gap-1">

@@ -152,10 +152,10 @@ export default function ProductTable({
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <img
-                          src={product.image || 'https://via.placeholder.com/50'}
+                          src={product.image || 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=100'}
                           alt={product.name}
                           className="w-10 h-10 rounded-lg object-cover bg-gray-100"
-                          onError={(e) => e.target.src = 'https://via.placeholder.com/50'}
+                          onError={(e) => e.target.src = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=100'}
                         />
                         <div>
                           <p className="font-medium text-gray-800 text-sm">{product.name}</p>
@@ -208,7 +208,6 @@ export default function ProductTable({
             </tbody>
           </table>
         </div>
-      )}
 
       {/* Mobile Cards */}
       <div className="lg:hidden p-4 space-y-3">
@@ -217,10 +216,10 @@ export default function ProductTable({
               <div key={product.id} className="border border-gray-100 rounded-xl p-3">
                 <div className="flex gap-3">
                   <img
-                    src={product.image || 'https://via.placeholder.com/50'}
+                    src={product.image || 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=100'}
                     alt={product.name}
                     className="w-14 h-14 rounded-lg object-cover bg-gray-100"
-                    onError={(e) => e.target.src = 'https://via.placeholder.com/50'}
+                    onError={(e) => e.target.src = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=100'}
                   />
                   <div className="flex-1">
                     <p className="font-semibold text-gray-800 text-sm">{product.name}</p>

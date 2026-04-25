@@ -78,8 +78,16 @@ export default function ProductForm({ product, brands, categories, onClose, onSa
   };
 
   const handleImageUrlChange = (e) => {
-    setForm({ ...form, image: e.target.value });
-    setImagePreview(e.target.value);
+    const value = e.target.value;
+    // If it's a filename (no http), prepend /images/
+    if (value && !value.startsWith('http') && !value.startsWith('data:')) {
+      setForm({ ...form, image: `/images/${value}` });
+      setImagePreview(`/images/${value}`);
+    } else {
+      setForm({ ...form, image: value });
+      setImagePreview(value);
+    }
+  };
   };
 
   const handleTypeChange = (type) => {
