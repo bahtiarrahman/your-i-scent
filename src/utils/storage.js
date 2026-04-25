@@ -157,6 +157,17 @@ const initialProducts = [
     price: 1650000,
     quantity: 4
   },
+  {
+    id: 100,
+    name: 'Sorrento',
+    brand: 'Mykonos',
+    categoryId: 1,
+    description: 'Parfum Sorrento',
+    image: '/images/sorrento.jpg',
+    type: 'decant',
+    prices: { "2": 35000, "5": 75000, "10": 140000 },
+    stock: { "2": 1, "5": 1, "10": 1 }
+  },
 ];
 
 // Initialize storage with default data

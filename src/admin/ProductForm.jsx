@@ -1,58 +1,51 @@
-import { useState, useEffect } from 'react';
-import { getProducts, saveProducts } from '../utils/storage';
-import { confirmAction, showSuccess, showWarning, showError } from '../utils/alerts';
-
-const PRODUCT_TYPES = [
-  { value: 'decant', label: 'Decant' },
-  { value: 'preloved', label: 'Preloved' },
-  { value: 'bnib', label: 'BNIB' }
-];
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { getProducts, saveProducts, getCategories, getBrands, isAdmin } from "../utils/storage";
+import { formatRupiah } from "../components/ProductCard";
+import { showSuccess, showError, showWarning, confirmAction } from "../utils/alerts";
 
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
     reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
   });
 };
 
-export default function ProductForm({ product, brands, categories, onClose, onSave }) {
-  const isEdit = !!product;
-  
+export default function ProductForm() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const editProduct = location.state?.product;
+
+  const [isEdit, setIsEdit] = useState(!!editProduct);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState(editProduct?.image || "");
+
   const [form, setForm] = useState({
-    name: '',
-    brand: '',
-    categoryId: 1,
-    description: '',
-    image: '',
-    type: 'decant',
-    price: 0,
-    quantity: 1,
-    stock: { "2": 1, "5": 1, "10": 1 },
-    prices: { "2": 35000, "5": 75000, "10": 140000 },
-    notes: { top: '', middle: '', base: '' }
+    id: editProduct?.id || Date.now(),
+    name: editProduct?.name || "",
+    brand: editProduct?.brand || "",
+    categoryId: editProduct?.categoryId || 1,
+    description: editProduct?.description || "",
+    image: editProduct?.image || "",
+    type: editProduct?.type || "decant",
+    price: editProduct?.price || 0,
+    prices: editProduct?.prices || { "2": 35000, "5": 75000, "10": 140000 },
+    quantity: editProduct?.quantity || 1,
+    stock: editProduct?.stock || { "2": 1, "5": 1, "10": 1 },
+    notes: editProduct?.notes || { top: "", middle: "", base: "" },
+    sizes: editProduct?.sizes || []
   });
 
-  const [imagePreview, setImagePreview] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
+  const categories = getCategories();
+  const brands = getBrands();
 
   useEffect(() => {
-    if (product) {
-      setForm({
-        name: product.name,
-        brand: product.brand,
-        categoryId: product.categoryId,
-        description: product.description || '',
-        image: product.image || '',
-        type: product.type,
-        price: product.price || 0,
-        quantity: product.quantity || 1,
-        stock: product.stock || { "2": 1, "5": 1, "10": 1 },
-        prices: product.prices || { "2": 35000, "5": 75000, "10": 140000 },
-        notes: product.notes || { top: '', middle: '', base: '' }
-      });
-      setImagePreview(product.image || '');
+    if (!isEdit && form.type === "decant") {
+      setForm({ ...form, stock: { "2": 1, "5": 1, "10": 1 }, prices: { "2": 35000, "5": 75000, "10": 140000 }, price: 0 });
+    } else if (!isEdit) {
+      setForm({ ...form, quantity: 1, stock: {}, price: 0, prices: {}, notes: { top: "", middle: "", base: "" } });
     }
   }, [product]);
 
@@ -61,7 +54,7 @@ export default function ProductForm({ product, brands, categories, onClose, onSa
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      await showError('Ukuran gambar terlalu besar! Maksimal 2MB.');
+      await showError("Ukuran gambar terlalu besar! Maksimal 2MB.");
       return;
     }
 
@@ -71,7 +64,7 @@ export default function ProductForm({ product, brands, categories, onClose, onSa
       setForm({ ...form, image: base64 });
       setImagePreview(base64);
     } catch (error) {
-      await showError('Gagal mengupload gambar.');
+      await showError("Gagal mengupload gambar.");
     } finally {
       setIsUploading(false);
     }
@@ -79,8 +72,7 @@ export default function ProductForm({ product, brands, categories, onClose, onSa
 
   const handleImageUrlChange = (e) => {
     const value = e.target.value;
-    // If it's a filename (no http), prepend /images/
-    if (value && !value.startsWith('http') && !value.startsWith('data:')) {
+    if (value && !value.startsWith("http") && !value.startsWith("data:")) {
       setForm({ ...form, image: `/images/${value}` });
       setImagePreview(`/images/${value}`);
     } else {
@@ -88,13 +80,12 @@ export default function ProductForm({ product, brands, categories, onClose, onSa
       setImagePreview(value);
     }
   };
-  };
 
   const handleTypeChange = (type) => {
-    if (type === 'decant') {
+    if (type === "decant") {
       setForm({ ...form, type, stock: { "2": 1, "5": 1, "10": 1 }, prices: { "2": 35000, "5": 75000, "10": 140000 }, price: 0 });
     } else {
-      setForm({ ...form, type, quantity: 1, stock: {}, price: 0, prices: {}, notes: { top: '', middle: '', base: '' } });
+      setForm({ ...form, type, quantity: 1, stock: {}, price: 0, prices: {}, notes: { top: "", middle: "", base: "" } });
     }
   };
 
@@ -115,263 +106,223 @@ export default function ProductForm({ product, brands, categories, onClose, onSa
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validasi
     if (!form.name.trim() || !form.brand.trim() || !form.description.trim()) {
-      await showWarning('Semua field wajib diisi!');
+      await showWarning("Semua field wajib diisi!");
       return;
     }
 
-    // Validasi produk duplikat
     const allProducts = getProducts();
     const duplicate = allProducts.find(p => 
       p.name.toLowerCase().trim() === form.name.toLowerCase().trim() &&
       p.brand.toLowerCase().trim() === form.brand.toLowerCase().trim() &&
       p.type === form.type &&
-      (!isEdit || p.id !== product.id)
+      (!isEdit || p.id !== editProduct.id)
     );
 
     if (duplicate) {
-      await showWarning(`Produk ${form.name} (${form.brand}) dengan jenis ${form.type} sudah ada!`);
+      await showWarning("Produk ini sudah ada!");
       return;
     }
 
-    try {
-      const products = getProducts();
-      
-      if (isEdit) {
-        // Update produk
-        const index = products.findIndex(p => p.id === product.id);
-        if (index !== -1) {
-          products[index] = { ...products[index], ...form };
-        }
-      } else {
-        // Tambah produk baru
-        const newProduct = { id: Date.now(), ...form };
-        products.push(newProduct);
-      }
-
-      saveProducts(products);
-      await showSuccess(isEdit ? 'Produk berhasil diperbarui!' : 'Produk berhasil ditambahkan!');
-      onSave();
-      onClose();
-    } catch (error) {
-      await showError('Gagal menyimpan produk: ' + error.message);
+    let products;
+    if (isEdit) {
+      products = allProducts.map(p => p.id === editProduct.id ? form : p);
+    } else {
+      products = [...allProducts, form];
     }
+
+    saveProducts(products);
+    await showSuccess(isEdit ? "Produk updated!" : "Produk ditambahkan!");
+    navigate("/admin/produk");
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white">
-          <h3 className="text-xl font-bold text-gray-800">
-            {isEdit ? 'Edit Produk' : 'Tambah Produk Baru'}
-          </h3>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+          {isEdit ? "Edit Produk" : "Tambah Produk"}
+        </h1>
+        <button onClick={() => navigate("/admin/produk")} className="text-gray-500 hover:text-gray-700">
+          ← Kembali
+        </button>
+      </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Image Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Gambar Produk</label>
-            <div className="flex gap-4 items-start">
-              <div className="w-24 h-24 rounded-xl bg-gray-100 overflow-hidden flex items-center justify-center">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                ) : (
-                  <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                )}
-              </div>
-              <div className="flex-1 space-y-2">
-                <input type="file" accept="image/*" onChange={handleImageUpload} className="input-field" />
-                <input
-                  type="text"
-                  placeholder="Atau masukkan URL gambar..."
-                  value={form.image}
-                  onChange={handleImageUrlChange}
-                  className="input-field"
-                />
-              </div>
+      <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Gambar Produk</label>
+          <div className="flex gap-4 items-start">
+            <div className="w-24 h-24 rounded-xl bg-gray-100 overflow-hidden flex items-center justify-center">
+              {imagePreview ? (
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+              ) : (
+                <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              )}
             </div>
-          </div>
-
-          {/* Nama & Brand */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Nama Produk</label>
+            <div className="flex-1 space-y-2">
+              <input type="file" accept="image/*" onChange={handleImageUpload} className="input-field" />
               <input
                 type="text"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-                placeholder="Contoh: Sauvage"
+                placeholder="Atau masukkan URL / nama file (cth: Sauvage.jpg)"
+                value={form.image.startsWith("/images/") ? form.image.replace("/images/", "") : form.image}
+                onChange={handleImageUrlChange}
                 className="input-field"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-              <select
-                value={form.brand}
-                onChange={(e) => setForm({ ...form, brand: e.target.value })}
-                required
-                className="input-field"
-              >
-                <option value="">Pilih Brand</option>
-                {brands.map(brand => (
-                  <option key={brand.id} value={brand.name}>{brand.name}</option>
-                ))}
-              </select>
-            </div>
           </div>
+        </div>
 
-          {/* Jenis & Kategori */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Jenis Produk</label>
-              <select value={form.type} onChange={(e) => handleTypeChange(e.target.value)} className="input-field">
-                {PRODUCT_TYPES.map(type => (
-                  <option key={type.value} value={type.value}>{type.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
-              <select
-                value={form.categoryId}
-                onChange={(e) => setForm({ ...form, categoryId: parseInt(e.target.value) })}
-                className="input-field"
-              >
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Deskripsi */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              required
-              rows={3}
-              placeholder="Deskripsi produk..."
+            <label className="block text-sm font-medium text-gray-700 mb-2">Nama Produk</label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="input-field"
+              placeholder="cth: Dior Sauvage"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
+            <input
+              type="text"
+              list="brands"
+              value={form.brand}
+              onChange={(e) => setForm({ ...form, brand: e.target.value })}
+              className="input-field"
+              placeholder="cth: Dior"
+            />
+            <datalist id="brands">
+              {brands.map(b => <option key={b.id} value={b.name} />)}
+            </datalist>
+          </div>
+        </div>
 
-          {/* Harga - different based on type */}
-          {form.type === 'decant' ? (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Harga per Ukuran (ml)</label>
-              <div className="grid grid-cols-3 gap-3">
-                {[2, 5, 10].map(size => (
-                  <div key={size}>
-                    <label className="text-xs text-gray-500">{size}ml</label>
-                    <input
-                      type="number"
-                      value={form.prices[size] || 0}
-                      onChange={(e) => handlePriceChange(size, e.target.value)}
-                      className="input-field"
-                      placeholder="Harga"
-                    />
-                  </div>
-                ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Jenis</label>
+            <select
+              value={form.type}
+              onChange={(e) => handleTypeChange(e.target.value)}
+              className="input-field"
+            >
+              <option value="decant">Decant</option>
+              <option value="preloved">Preloved</option>
+              <option value="bnib">BNIB (Brand New In Box)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
+            <select
+              value={form.categoryId}
+              onChange={(e) => setForm({ ...form, categoryId: parseInt(e.target.value) })}
+              className="input-field"
+            >
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
+          <textarea
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            className="input-field h-24"
+            placeholder="Deskripsi produk..."
+          />
+        </div>
+
+        {form.type === "decant" && (
+          <div className="space-y-4">
+            <h3 className="font-semibold text-gray-800">Harga & Stok per Size</h3>
+            {["2", "5", "10"].map(size => (
+              <div key={size} className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Size {size}ml</label>
+                  <input
+                    type="number"
+                    value={form.stock[size]}
+                    onChange={(e) => handleStockChange(size, e.target.value)}
+                    className="input-field"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Harga</label>
+                  <input
+                    type="number"
+                    value={form.prices[size]}
+                    onChange={(e) => handlePriceChange(size, e.target.value)}
+                    className="input-field"
+                    min="0"
+                  />
+                </div>
               </div>
-            </div>
-          ) : (
+            ))}
+          </div>
+        )}
+
+        {(form.type === "preloved" || form.type === "bnib") && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Harga</label>
               <input
                 type="number"
                 value={form.price}
-                onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
+                onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) })}
                 className="input-field"
-                placeholder="Harga"
+                min="0"
               />
             </div>
-          )}
-
-          {/* Stok - different based on type */}
-          {form.type === 'decant' ? (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Stok per Ukuran (ml)</label>
-              <div className="grid grid-cols-3 gap-3">
-                {[2, 5, 10].map(size => (
-                  <div key={size}>
-                    <label className="text-xs text-gray-500">{size}ml</label>
-                    <input
-                      type="number"
-                      value={form.stock[size] || 0}
-                      onChange={(e) => handleStockChange(size, e.target.value)}
-                      className="input-field"
-                      placeholder="Stok"
-                      min="0"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Stok</label>
               <input
                 type="number"
                 value={form.quantity}
-                onChange={(e) => setForm({ ...form, quantity: parseInt(e.target.value) || 0 })}
+                onChange={(e) => setForm({ ...form, quantity: parseInt(e.target.value) })}
+                className="input-field"
                 min="0"
-                className="input-field w-32"
               />
             </div>
-          )}
-
-          {/* Fragrance Notes (Decant only) */}
-          {form.type === 'decant' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Fragrance Notes</label>
-              <div className="grid grid-cols-3 gap-3">
-                <input
-                  type="text"
-                  value={form.notes.top}
-                  onChange={(e) => setForm({ ...form, notes: { ...form.notes, top: e.target.value } })}
-                  placeholder="Top Notes"
-                  className="input-field"
-                />
-                <input
-                  type="text"
-                  value={form.notes.middle}
-                  onChange={(e) => setForm({ ...form, notes: { ...form.notes, middle: e.target.value } })}
-                  placeholder="Middle Notes"
-                  className="input-field"
-                />
-                <input
-                  type="text"
-                  value={form.notes.base}
-                  onChange={(e) => setForm({ ...form, notes: { ...form.notes, base: e.target.value } })}
-                  placeholder="Base Notes"
-                  className="input-field"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Buttons */}
-          <div className="flex gap-3 justify-end pt-4 border-t">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-xl">
-              Batal
-            </button>
-            <button type="submit" className="btn-primary">
-              {isEdit ? 'Simpan Perubahan' : 'Tambah Produk'}
-            </button>
           </div>
-        </form>
-      </div>
+        )}
+
+        {form.type === "preloved" && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Catatan Notes</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <input
+                type="text"
+                value={form.notes?.top || ""}
+                onChange={(e) => setForm({ ...form, notes: { ...form.notes, top: e.target.value } })}
+                className="input-field"
+                placeholder="Top notes..."
+              />
+              <input
+                type="text"
+                value={form.notes?.middle || ""}
+                onChange={(e) => setForm({ ...form, notes: { ...form.notes, middle: e.target.value } })}
+                className="input-field"
+                placeholder="Middle notes..."
+              />
+              <input
+                type="text"
+                value={form.notes?.base || ""}
+                onChange={(e) => setForm({ ...form, notes: { ...form.notes, base: e.target.value } })}
+                className="input-field"
+                placeholder="Base notes..."
+              />
+            </div>
+          </div>
+        )}
+
+        <button type="submit" className="btn-primary w-full" disabled={isUploading}>
+          {isUploading ? "Mengupload..." : isEdit ? "Update Produk" : "Tambah Produk"}
+        </button>
+      </form>
     </div>
   );
 }
