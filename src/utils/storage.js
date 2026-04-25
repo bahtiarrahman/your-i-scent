@@ -20,14 +20,14 @@ const initialCategories = [
 ];
 
 const initialBrands = [
-  { id: 1, name: 'Dior' },
-  { id: 2, name: 'Chanel' },
-  { id: 3, name: 'Tom Ford' },
-  { id: 4, name: 'Versace' },
-  { id: 5, name: 'Gucci' },
-  { id: 6, name: 'Yves Saint Laurent' },
-  { id: 7, name: 'Jo Malone' },
-  { id: 8, name: 'Calvin Klein' }
+  { id: 1, name: 'Mykonos' },
+  { id: 2, name: 'Velixir' },
+  { id: 3, name: 'Amhtra' },
+  { id: 4, name: 'Afnan' },
+  { id: 5, name: 'French Avenue' },
+  { id: 6, name: 'Rasasi' },
+  { id: 7, name: 'Rue Brocca' },
+  { id: 8, name: 'Zimaya' }
 ];
 
 const initialProducts = [
@@ -49,75 +49,37 @@ const initialProducts = [
   },
   {
     id: 2,
-    name: 'Chanel Bleu de Chanel',
-    brand: 'Chanel',
-    categoryId: 1,
-    description: 'Aroma woody dan aromatik yang elegan. Sangat cocok untuk acara formal.',
-    image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400',
-    type: 'decant',
-    prices: {
-      "2": 45000,
-      "5": 95000,
-      "10": 180000
-    },
-    quantity: 8
-  },
-  {
-    id: 3,
-    name: 'Tom Ford Black Orchid',
-    brand: 'Tom Ford',
-    categoryId: 2,
-    description: 'Parfum mewah dengan notes floral dan truffle hitam. Mysteriouse dan memukau.',
-    image: 'https://images.unsplash.com/photo-1585232569525-f087bd9dae8e?w=400',
-    type: 'decant',
-    prices: {
-      "2": 55000,
-      "5": 115000,
-      "10": 215000
-    },
-    quantity: 5
-  },
-  {
-    id: 4,
-    name: 'YSL Black Opium',
-    brand: 'YSL',
-    categoryId: 2,
-    description: 'Aroma manis dengan coffee notes. Glamorous dan feminin.',
-    image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=400',
-    type: 'decant',
-    prices: {
-      "2": 40000,
-      "5": 85000,
-      "10": 160000
-    },
-    quantity: 12
-  },
-  {
-    id: 5,
-    name: 'Creed Aventus',
-    brand: 'Creed',
-    categoryId: 1,
-    description: 'Legendary fragrance dengan notes fruity dan woody. Symbol of success.',
-    image: 'https://images.unsplash.com/photo-1595425970339-27414395c085?w=400',
-    type: 'decant',
-    prices: {
-      "2": 65000,
-      "5": 135000,
-      "10": 255000
-    },
-    quantity: 3
-  },
-  {
-    id: 3,
     name: 'Sorrento',
     brand: 'Mykonos',
     categoryId: 1,
     description: 'Parfum Sorrento',
     image: '/images/sorrento.jpg',
     type: 'decant',
-    prices: { "2": 35000, "5": 75000, "10": 140000 },
+    prices: { "2": 16000, "5": 35000, "10": 60000 },
     stock: { "2": 1, "5": 1, "10": 1 }
   },
+  {
+    id: 3,
+    name: 'California Blu',
+    brand: 'Mykonos',
+    categoryId: 1,
+    description: 'Parfum California Blu',
+    image: '/images/california blu.jpg',
+    type: 'decant',
+    prices: { "2": 16000, "5": 35000, "10": 60000 },
+    stock: { "2": 1, "5": 1, "10": 1 }
+  },
+  {
+    id: 4,
+    name: 'Dreamscape',
+    brand: 'Mykonos',
+    categoryId: 1,
+    description: 'Parfum Dreamscape',
+    image: '/images/dreamscape.jpg',
+    type: 'decant',
+    prices: { "2": 16000, "5": 35000, "10": 60000 },
+    stock: { "2": 1, "5": 1, "10": 1 }
+  }
 ];
 
 // Initialize storage with default data
