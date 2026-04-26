@@ -83,10 +83,10 @@ export default function Brands() {
     }
 
     if (editingBrand) {
-      updateBrand(editingBrand.id, name);
+      updateBrand(editingBrand.id, { name });
       await showSuccess('Brand berhasil diperbarui!');
     } else {
-      addBrand(name);
+      addBrand({ name });
       await showSuccess('Brand berhasil ditambahkan!');
     }
 
