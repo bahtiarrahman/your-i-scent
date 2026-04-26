@@ -187,7 +187,7 @@ export default function Orders() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Kelola Pesanan</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Kelola Pesanan</h1>
           <Link to="/admin" className="text-primary-600 hover:text-primary-700 mt-2 inline-block">
             Kembali ke Dashboard
           </Link>

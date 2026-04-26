@@ -77,7 +77,7 @@ export default function Dashboard() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard Admin</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Dashboard Admin</h1>
           <p className="text-gray-500 mt-1">Kelola toko parfum Anda</p>
         </div>
         <button
@@ -89,46 +89,46 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 mb-1">Total Produk</p>
-              <p className="text-2xl lg:text-4xl font-bold text-primary-600">{stats.products}</p>
+              <p className="text-4xl font-bold text-primary-600">{stats.products}</p>
             </div>
-            <Package className="w-8 h-8 lg:w-12 lg:h-12 text-primary-500" />
+            <Package className="w-12 h-12 text-primary-500" />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 mb-1">Total Pesanan</p>
-              <p className="text-2xl lg:text-4xl font-bold text-primary-600">{stats.orders}</p>
+              <p className="text-4xl font-bold text-primary-600">{stats.orders}</p>
             </div>
-            <ShoppingCart className="w-8 h-8 lg:w-12 lg:h-12 text-blue-500" />
+            <ShoppingCart className="w-12 h-12 text-blue-500" />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 sm:col-span-2 lg:col-span-1">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 mb-1">Total Pendapatan</p>
-              <p className="text-xl lg:text-4xl font-bold text-green-600">{formatRupiah(stats.revenue)}</p>
+              <p className="text-4xl font-bold text-green-600">{formatRupiah(stats.revenue)}</p>
             </div>
-            <DollarSign className="w-8 h-8 lg:w-12 lg:h-12 text-green-500" />
+            <DollarSign className="w-12 h-12 text-green-500" />
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Link
           to="/admin/produk"
-          className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 hover:shadow-md transition-shadow"
+          className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
         >
-          <div className="flex items-center gap-3 lg:gap-4">
-            <Package className="w-8 h-8 lg:w-10 lg:h-10 text-primary-500" />
+          <div className="flex items-center gap-4">
+            <Package className="w-10 h-10 text-primary-500" />
             <div>
               <h3 className="font-semibold text-gray-800">Produk</h3>
               <p className="text-sm text-gray-500">Kelola produk</p>
@@ -138,10 +138,10 @@ export default function Dashboard() {
 
         <Link
           to="/admin/pesanan"
-          className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 hover:shadow-md transition-shadow"
+          className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
         >
-          <div className="flex items-center gap-3 lg:gap-4">
-            <ShoppingCart className="w-8 h-8 lg:w-10 lg:h-10 text-blue-500" />
+          <div className="flex items-center gap-4">
+            <ShoppingCart className="w-10 h-10 text-blue-500" />
             <div>
               <h3 className="font-semibold text-gray-800">Pesanan</h3>
               <p className="text-sm text-gray-500">Kelola pesanan</p>
@@ -151,7 +151,7 @@ export default function Dashboard() {
 
         <Link
           to="/admin/pembayaran"
-          className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 hover:shadow-md transition-shadow"
+          className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
         >
           <div className="flex items-center gap-4">
             <Settings className="w-10 h-10 text-green-500" />
@@ -164,7 +164,7 @@ export default function Dashboard() {
 
         <Link
           to="/"
-          className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 hover:shadow-md transition-shadow"
+          className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
         >
           <div className="flex items-center gap-4">
             <Package className="w-10 h-10 text-yellow-500" />

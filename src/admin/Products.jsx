@@ -1,9 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getProducts, getCategories, getBrands, isAdmin as checkIsAdmin } from '../utils/storage';
-import { showError } from '../utils/alerts';
-import ProductTable from './ProductTable';
-import ProductForm from './ProductForm';
+import { getProducts, getCategories, getBrands, saveProducts, isAdmin as checkIsAdmin } from '../utils/storage';
+import { formatRupiah } from '../components/ProductCard';
+import { confirmAction, showSuccess, showInfo, showError, showWarning } from '../utils/alerts';
+
+const PRODUCT_TYPES = [
+  { value: 'decant', label: 'Decant' },
+  { value: 'preloved', label: 'Preloved' },
+  { value: 'bnib', label: 'BNIB' }
+];
+
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
 
 export default function Products() {
   const navigate = useNavigate();
@@ -13,10 +27,32 @@ export default function Products() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('semua');
+  const [form, setForm] = useState({
+    name: '',
+    brand: '',
+    categoryId: 1,
+    description: '',
+    image: '',
+    type: 'decant',
+    price: 0,
+    quantity: 1,
+    prices: {
+      "2": 35000,
+      "5": 75000,
+      "10": 140000
+    },
+    notes: {
+      top: '',
+      middle: '',
+      base: ''
+    }
+  });
 
   useEffect(() => {
     const adminData = checkIsAdmin();
@@ -33,48 +69,261 @@ export default function Products() {
 
   const loadData = () => {
     setProducts(getProducts());
-    setCategories(getCategories() || []);
-    setBrands(getBrands() || []);
+
+    const cat = getCategories();
+    const brand = getBrands();
+
+    setCategories(cat || []);
+    setBrands(brand || []);
   };
 
-  if (!isLoggedIn) return null;
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      await showError('Ukuran gambar terlalu besar! Maksimal 2MB.');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      await showError('File harus berupa gambar (JPG, PNG, dll).');
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const base64 = await fileToBase64(file);
+      setForm({ ...form, image: base64 });
+      setImagePreview(base64);
+    } catch (error) {
+      await showError('Gagal mengupload gambar. Silakan coba lagi.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleImageUrlChange = (e) => {
+    setForm({ ...form, image: e.target.value });
+    setImagePreview(e.target.value);
+  };
+
+  const handleTypeChange = (type) => {
+    if (type === 'decant') {
+      setForm({ 
+        ...form, 
+        type,
+        prices: {
+          "2": 35000,
+          "5": 75000,
+          "10": 140000
+        },
+        price: 0
+      });
+    } else {
+      setForm({ 
+        ...form, 
+        type,
+        price: 0,
+        prices: {},
+        notes: {
+          top: '',
+          middle: '',
+          base: ''
+        }
+      });
+    }
+  };
 
   const openAddModal = () => {
     setEditingProduct(null);
+    setForm({
+      name: '',
+      brand: '',
+      categoryId: 1,
+      description: '',
+      image: '',
+      type: 'decant',
+      price: 0,
+      quantity: 1,
+      prices: {
+        "2": 35000,
+        "5": 75000,
+        "10": 140000
+      },
+      notes: {
+        top: '',
+        middle: '',
+        base: ''
+      }
+    });
+    setImagePreview('');
     setShowModal(true);
   };
 
   const openEditModal = (product) => {
     setEditingProduct(product);
+    const productNotes = product.notes || { top: '', middle: '', base: '' };
+    setForm({
+      name: product.name,
+      brand: product.brand,
+      categoryId: product.categoryId,
+      description: product.description,
+      image: product.image,
+      type: product.type || 'decant',
+      price: product.price || 0,
+      quantity: product.quantity || 1,
+      prices: product.prices || {
+        "2": product.sizes?.find(s => s.size === 2)?.price || 35000,
+        "5": product.sizes?.find(s => s.size === 5)?.price || 75000,
+        "10": product.sizes?.find(s => s.size === 10)?.price || 140000
+      },
+      notes: productNotes
+    });
+    setImagePreview(product.image);
     setShowModal(true);
   };
 
-  const closeModal = () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!form.name.trim() || !form.brand.trim() || !form.description.trim()) {
+      await showWarning('Lengkapi semua data produk dulu ya!');
+      return;
+    }
+
+    if (!form.image) {
+      await showWarning('Gambar produk wajib diisi!');
+      return;
+    }
+
+    if (form.type === 'decant') {
+      const hasValidPrices = form.prices["2"] > 0 || form.prices["5"] > 0 || form.prices["10"] > 0;
+      if (!hasValidPrices) {
+        await showWarning('Harga produk harus diisi dengan benar!');
+        return;
+      }
+    } else {
+      if (!form.price || form.price <= 0) {
+        await showWarning('Harga produk wajib diisi!');
+        return;
+      }
+    }
+
+    // Validasi produk duplikat (nama + brand + jenis sama)
+    const isDuplicate = products.some(p => {
+      if (editingProduct && p.id === editingProduct.id) return false;
+      const sameName = p.name.toLowerCase().trim() === form.name.toLowerCase().trim();
+      const sameBrand = p.brand.toLowerCase().trim() === form.brand.toLowerCase().trim();
+      const sameType = p.type === form.type;
+      return sameName && sameBrand && sameType;
+    });
+
+    if (isDuplicate) {
+      await showWarning(`Produk ${form.name} (${form.brand}) dengan jenis ${form.type} sudah ada! Tidak boleh ada data duplikat.`);
+      return;
+    }
+
+    let newProducts = [...products];
+
+    const productData = {
+      ...form,
+      ...(form.type === 'decant' ? { price: 0 } : { prices: {} })
+    };
+
+    if (editingProduct) {
+      newProducts = newProducts.map(p =>
+        p.id === editingProduct.id ? { ...productData, id: p.id } : p
+      );
+    } else {
+      const newId = Math.max(...products.map(p => p.id), 0) + 1;
+      newProducts.push({ ...productData, id: newId });
+    }
+
+    saveProducts(newProducts);
+    setProducts(newProducts);
     setShowModal(false);
-    setEditingProduct(null);
-    loadData();
+    setImagePreview('');
+
+    await showSuccess('Produk berhasil disimpan!');
   };
 
-  // Filter & Search
+  const handleDelete = async (id) => {
+    const product = products.find(p => p.id === id);
+    const confirmed = await confirmAction({
+      title: 'Hapus Produk?',
+      text: product?.name ? `${product.name} akan dihapus.` : 'Produk yang dihapus tidak bisa dikembalikan.',
+      confirmText: 'Ya, Hapus'
+    });
+
+    if (confirmed) {
+      const newProducts = products.filter(p => p.id !== id);
+      saveProducts(newProducts);
+      setProducts(newProducts);
+      await showSuccess('Produk berhasil dihapus!');
+    }
+  };
+
+  const updateSizePrice = (size, price) => {
+    setForm({ 
+      ...form, 
+      prices: { 
+        ...form.prices, 
+        [size]: parseInt(price) || 0 
+      } 
+    });
+  };
+
+  const getDisplayPrice = (product) => {
+    if (product.type === 'decant') {
+      const prices = product.prices || {};
+      const priceValues = Object.values(prices).filter(p => p > 0);
+      if (priceValues.length > 0) {
+        return formatRupiah(Math.min(...priceValues));
+      }
+      // Fallback to old format
+      const prices2 = product.sizes?.find(s => s.size === 2)?.price || 0;
+      return formatRupiah(prices2);
+    }
+    return formatRupiah(product.price || 0);
+  };
+
+  const getTypeBadge = (type) => {
+    const badges = {
+      decant: { label: 'DECANT', class: 'bg-yellow-100 text-yellow-700' },
+      preloved: { label: 'PRELOVED', class: 'bg-blue-100 text-blue-700' },
+      bnib: { label: 'BNIB', class: 'bg-purple-100 text-purple-700' }
+    };
+    const badge = badges[type] || badges.decant;
+    return <span className={`px-2 py-0.5 rounded text-xs font-semibold ${badge.class}`}>{badge.label}</span>;
+  };
+
+  if (!isLoggedIn) return null;
+
+  // Filter products based on search and type
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.brand.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'semua' || product.type === filterType;
-    return matchesSearch && matchesType;
+    if (!searchTerm) {
+      if (filterType === 'semua') return true;
+      return product.type === filterType;
+    }
+    const search = searchTerm.toLowerCase();
+    if (filterType !== 'semua' && product.type !== filterType) return false;
+    return (
+      product.name.toLowerCase().includes(search) ||
+      product.brand.toLowerCase().includes(search) ||
+      product.type.toLowerCase().includes(search)
+    );
   });
 
   // Pagination
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentProducts = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -90,30 +339,450 @@ export default function Products() {
         </button>
       </div>
 
-      <ProductTable
-        products={currentProducts}
-        categories={categories}
-        brands={brands}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        filterType={filterType}
-        setFilterType={setFilterType}
-        onEdit={openEditModal}
-        onDelete={loadData}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Search & Filter */}
+        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <div className="relative w-full sm:max-w-md">
+              <input
+                type="text"
+                placeholder="Cari produk..."
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                className="input-field pl-10 w-full"
+              />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <select
+              value={filterType}
+              onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }}
+              className="input-field w-full sm:w-40"
+            >
+              <option value="semua">Semua Jenis</option>
+              {PRODUCT_TYPES.map(type => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
+            </select>
+          </div>
+          <p className="text-sm text-gray-500 whitespace-nowrap">
+            {filteredProducts.length} produk
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                <th className="text-left py-3 px-3 text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Img</th>
+                <th className="text-left py-3 px-3 text-xs font-medium text-gray-500 uppercase">Nama</th>
+                <th className="text-left py-3 px-3 text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Jenis</th>
+                <th className="text-left py-3 px-3 text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Brand</th>
+                <th className="text-left py-3 px-3 text-xs font-medium text-gray-500 uppercase">Harga</th>
+                <th className="text-left py-3 px-3 text-xs font-medium text-gray-500 uppercase">Stok</th>
+                <th className="text-left py-3 px-3 text-xs font-medium text-gray-500 uppercase">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {currentProducts.map(product => (
+                <tr key={product.id} className="hover:bg-gray-50">
+                  <td className="py-4 px-6">
+                    <img src={product.image} alt={product.name} className="w-14 h-14 object-cover rounded-xl" />
+                  </td>
+                  <td className="py-4 px-6">
+                    <p className="font-medium text-gray-800">{product.name}</p>
+                  </td>
+                  <td className="py-4 px-6">
+                    {getTypeBadge(product.type)}
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className="px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm font-medium">
+                      {product.brand}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className="font-semibold text-primary-600">
+                      {getDisplayPrice(product)}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    {product.type === 'decant' ? (
+                      <div className="flex gap-2 text-xs">
+                        <span className={`px-2 py-1 rounded ${product.stock?.["2"] > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          2ml: {product.stock?.["2"] || 0}
+                        </span>
+                        <span className={`px-2 py-1 rounded ${product.stock?.["5"] > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          5ml: {product.stock?.["5"] || 0}
+                        </span>
+                        <span className={`px-2 py-1 rounded ${product.stock?.["10"] > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          10ml: {product.stock?.["10"] || 0}
+                        </span>
+                      </div>
+                    ) : (
+                      product.quantity > 0 ? (
+                        <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                          {product.quantity} pcs
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
+                          Habis
+                        </span>
+                      )
+                    )}
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => openEditModal(product)}
+                        className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 text-sm font-medium"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(product.id)}
+                        className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm font-medium"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredProducts.length === 0 && (
+          <div className="p-12 text-center">
+            <p className="text-gray-500 mb-4">Tidak ada produk yang ditemukan</p>
+            <button onClick={openAddModal} className="btn-primary inline-block">
+              Tambah Produk Baru
+            </button>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {filteredProducts.length > 0 && (
+          <div className="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-gray-500 order-2 sm:order-1">
+              Halaman {currentPage} dari {totalPages}
+            </p>
+            <div className="flex items-center gap-1 order-1 sm:order-2">
+              <button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                ← Sebelumnya
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+                <button
+                  key={number}
+                  onClick={() => paginate(number)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                    currentPage === number
+                      ? 'bg-primary-500 text-white'
+                      : 'border border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {number}
+                </button>
+              ))}
+
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Berikutnya →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {showModal && (
-        <ProductForm
-          product={editingProduct}
-          brands={brands}
-          categories={categories}
-          onClose={closeModal}
-          onSave={loadData}
-        />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4 py-8">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+              <h2 className="text-xl font-bold text-gray-800">
+                {editingProduct ? 'Edit Produk' : 'Tambah Produk Baru'}
+              </h2>
+              <button
+                onClick={() => { setShowModal(false); setImagePreview(''); }}
+                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <label className="block text-sm font-medium text-gray-700 mb-3">Foto Produk</label>
+                {imagePreview && (
+                  <div className="mb-4">
+                    <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-xl mx-auto" />
+                  </div>
+                )}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center">
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 font-medium">
+                      {isUploading ? 'Mengupload...' : 'Upload Foto'}
+                      <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px bg-gray-200"></div>
+                    <span className="text-sm text-gray-400">atau</span>
+                    <div className="flex-1 h-px bg-gray-200"></div>
+                  </div>
+                  <input
+                    type="url"
+                    value={form.image.startsWith('data:') ? '' : form.image}
+                    onChange={handleImageUrlChange}
+                    placeholder="Atau masukkan URL gambar..."
+                    className="input-field text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nama Produk</label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    required
+                    placeholder="Contoh: Dior Sauvage"
+                    className="input-field"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
+                  <select
+                    value={form.brand}
+                    onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                    required
+                    className="input-field"
+                  >
+                    <option value="">Pilih Brand</option>
+                    {brands.map((b) => (
+                      <option key={b.id} value={b.name}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Jenis Produk</label>
+                <select
+                  value={form.type}
+                  onChange={(e) => handleTypeChange(e.target.value)}
+                  className="input-field"
+                >
+                  {PRODUCT_TYPES.map(type => (
+                    <option key={type.value} value={type.value}>{type.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
+                <select
+                  value={Number(form.categoryId)}
+                  onChange={(e) => setForm({ ...form, categoryId: parseInt(e.target.value) })}
+                  className="input-field"
+                >
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Deskripsi</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  required
+                  rows="3"
+                  placeholder="Deskripsi produk..."
+                  className="input-field resize-none"
+                />
+              </div>
+
+              {/* Fragrance Notes */}
+              <div className="p-4 bg-yellow-50 rounded-xl">
+                <label className="block text-sm font-medium text-gray-700 mb-3">Fragrance Notes</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Top Notes</label>
+                    <input
+                      type="text"
+                      value={form.notes.top || ''}
+                      onChange={(e) => setForm({ ...form, notes: { ...form.notes, top: e.target.value } })}
+                      placeholder="Contoh: Bergamot, Lemon"
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Middle Notes</label>
+                    <input
+                      type="text"
+                      value={form.notes.middle || ''}
+                      onChange={(e) => setForm({ ...form, notes: { ...form.notes, middle: e.target.value } })}
+                      placeholder="Contoh: Lavender, Pepper"
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Base Notes</label>
+                    <input
+                      type="text"
+                      value={form.notes.base || ''}
+                      onChange={(e) => setForm({ ...form, notes: { ...form.notes, base: e.target.value } })}
+                      placeholder="Contoh: Ambroxan, Cedarwood"
+                      className="input-field"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {form.type === 'decant' && (
+                <div className="p-4 bg-gray-50 rounded-xl">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Harga per Ukuran</label>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <label className="block text-sm font-medium text-gray-600 mb-2">2ml</label>
+                      <input
+                        type="number"
+                        value={form.prices["2"] || 0}
+                        onChange={(e) => updateSizePrice("2", e.target.value)}
+                        required
+                        min="0"
+                        className="input-field text-center"
+                      />
+                    </div>
+                    <div className="text-center">
+                      <label className="block text-sm font-medium text-gray-600 mb-2">5ml</label>
+                      <input
+                        type="number"
+                        value={form.prices["5"] || 0}
+                        onChange={(e) => updateSizePrice("5", e.target.value)}
+                        required
+                        min="0"
+                        className="input-field text-center"
+                      />
+                    </div>
+                    <div className="text-center">
+                      <label className="block text-sm font-medium text-gray-600 mb-2">10ml</label>
+                      <input
+                        type="number"
+                        value={form.prices["10"] || 0}
+                        onChange={(e) => updateSizePrice("10", e.target.value)}
+                        required
+                        min="0"
+                        className="input-field text-center"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {form.type === 'decant' && (
+                <div className="p-4 bg-gray-50 rounded-xl">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Stok per Ukuran</label>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <label className="block text-sm font-medium text-gray-600 mb-2">2ml</label>
+                      <input
+                        type="number"
+                        value={form.stock?.["2"] || 0}
+                        onChange={(e) => setForm({ ...form, stock: { ...form.stock, "2": parseInt(e.target.value) || 0 } })}
+                        required
+                        min="0"
+                        className="input-field text-center"
+                      />
+                    </div>
+                    <div className="text-center">
+                      <label className="block text-sm font-medium text-gray-600 mb-2">5ml</label>
+                      <input
+                        type="number"
+                        value={form.stock?.["5"] || 0}
+                        onChange={(e) => setForm({ ...form, stock: { ...form.stock, "5": parseInt(e.target.value) || 0 } })}
+                        required
+                        min="0"
+                        className="input-field text-center"
+                      />
+                    </div>
+                    <div className="text-center">
+                      <label className="block text-sm font-medium text-gray-600 mb-2">10ml</label>
+                      <input
+                        type="number"
+                        value={form.stock?.["10"] || 0}
+                        onChange={(e) => setForm({ ...form, stock: { ...form.stock, "10": parseInt(e.target.value) || 0 } })}
+                        required
+                        min="0"
+                        className="input-field text-center"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {form.type !== 'decant' && (
+                <div className="p-4 bg-gray-50 rounded-xl">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Harga</label>
+                  <input
+                    type="number"
+                    value={form.price}
+                    onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
+                    required
+                    min="0"
+                    placeholder="Masukkan harga produk..."
+                    className="input-field"
+                  />
+                </div>
+              )}
+
+              {/* Stok Quantity */}
+              <div className="p-4 bg-green-50 rounded-xl">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Stok</label>
+                <input
+                  type="number"
+                  value={form.quantity}
+                  onChange={(e) => setForm({ ...form, quantity: parseInt(e.target.value) || 0 })}
+                  required
+                  min="0"
+                  placeholder="Jumlah stok..."
+                  className="input-field"
+                />
+                <p className="text-xs text-gray-500 mt-2">Jumlah stok produk yang tersedia</p>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => { setShowModal(false); setImagePreview(''); }}
+                  className="flex-1 py-3.5 border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-50"
+                >
+                  Batal
+                </button>
+                <button type="submit" className="flex-1 py-3.5 btn-primary">
+                  {editingProduct ? 'Simpan Perubahan' : 'Tambah Produk'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
 }
+

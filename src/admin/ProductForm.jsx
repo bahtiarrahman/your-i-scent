@@ -47,7 +47,7 @@ export default function ProductForm() {
     } else if (!isEdit) {
       setForm({ ...form, quantity: 1, stock: {}, price: 0, prices: {}, notes: { top: "", middle: "", base: "" } });
     }
-  }, [product]);
+  }, [isEdit, form.type]);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];

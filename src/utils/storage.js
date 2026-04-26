@@ -20,23 +20,23 @@ const initialCategories = [
 ];
 
 const initialBrands = [
-  { id: 1, name: 'Mykonos' },
-  { id: 2, name: 'Velixir' },
-  { id: 3, name: 'Amhtra' },
-  { id: 4, name: 'Afnan' },
-  { id: 5, name: 'French Avenue' },
-  { id: 6, name: 'Rasasi' },
-  { id: 7, name: 'Rue Brocca' },
-  { id: 8, name: 'Zimaya' }
+  { id: 1, name: 'Dior' },
+  { id: 2, name: 'Chanel' },
+  { id: 3, name: 'Tom Ford' },
+  { id: 4, name: 'Versace' },
+  { id: 5, name: 'Gucci' },
+  { id: 6, name: 'Yves Saint Laurent' },
+  { id: 7, name: 'Jo Malone' },
+  { id: 8, name: 'Calvin Klein' }
 ];
 
 const initialProducts = [
   // Decant Products
   {
     id: 1,
-    name: 'Demeter',
-    brand: 'Velixir',
-    categoryId: 2,
+    name: 'Dior Sauvage',
+    brand: 'Dior',
+    categoryId: 1,
     description: 'Parfum iconic dengan aroma segar dan maskulin. Cocok untuk pria modern.',
     image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400',
     type: 'decant',
@@ -49,37 +49,114 @@ const initialProducts = [
   },
   {
     id: 2,
-    name: 'Sorrento',
-    brand: 'Mykonos',
+    name: 'Chanel Bleu de Chanel',
+    brand: 'Chanel',
     categoryId: 1,
-    description: 'Parfum Sorrento',
-    image: '/images/sorrento.jpg',
+    description: 'Aroma woody dan aromatik yang elegan. Sangat cocok untuk acara formal.',
+    image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400',
     type: 'decant',
-    prices: { "2": 16000, "5": 35000, "10": 60000 },
-    stock: { "2": 1, "5": 1, "10": 1 }
+    prices: {
+      "2": 45000,
+      "5": 95000,
+      "10": 180000
+    },
+    quantity: 8
   },
   {
     id: 3,
-    name: 'California Blu',
-    brand: 'Mykonos',
-    categoryId: 1,
-    description: 'Parfum California Blu',
-    image: '/images/california blu.jpg',
+    name: 'Tom Ford Black Orchid',
+    brand: 'Tom Ford',
+    categoryId: 2,
+    description: 'Parfum mewah dengan notes floral dan truffle hitam. Mysteriouse dan memukau.',
+    image: 'https://images.unsplash.com/photo-1585232569525-f087bd9dae8e?w=400',
     type: 'decant',
-    prices: { "2": 16000, "5": 35000, "10": 60000 },
-    stock: { "2": 1, "5": 1, "10": 1 }
+    prices: {
+      "2": 55000,
+      "5": 115000,
+      "10": 215000
+    },
+    quantity: 5
   },
   {
     id: 4,
-    name: 'Dreamscape',
-    brand: 'Mykonos',
-    categoryId: 1,
-    description: 'Parfum Dreamscape',
-    image: '/images/dreamscape.jpg',
+    name: 'YSL Black Opium',
+    brand: 'YSL',
+    categoryId: 2,
+    description: 'Aroma manis dengan coffee notes. Glamorous dan feminin.',
+    image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=400',
     type: 'decant',
-    prices: { "2": 16000, "5": 35000, "10": 60000 },
-    stock: { "2": 1, "5": 1, "10": 1 }
-  }
+    prices: {
+      "2": 40000,
+      "5": 85000,
+      "10": 160000
+    },
+    quantity: 12
+  },
+  {
+    id: 5,
+    name: 'Creed Aventus',
+    brand: 'Creed',
+    categoryId: 1,
+    description: 'Legendary fragrance dengan notes fruity dan woody. Symbol of success.',
+    image: 'https://images.unsplash.com/photo-1595425970339-27414395c085?w=400',
+    type: 'decant',
+    prices: {
+      "2": 65000,
+      "5": 135000,
+      "10": 255000
+    },
+    quantity: 3
+  },
+  {
+    id: 6,
+    name: 'Jo Malone Wood Sage & Sea Salt',
+    brand: 'Jo Malone',
+    categoryId: 3,
+    description: 'Fresh dan clean dengan notes sea salt dan sage. Sangat versatile.',
+    image: 'https://images.unsplash.com/photo-1595425970339-27414395c085?w=400',
+    type: 'decant',
+    prices: {
+      "2": 50000,
+      "5": 105000,
+      "10": 195000
+    },
+    quantity: 7
+  },
+  // Preloved Products
+  {
+    id: 7,
+    name: 'Versace Dylan Blue',
+    brand: 'Versace',
+    categoryId: 1,
+    description: 'Parfum preloved kondisi 90% masih penuh. Aroma fresh citrus yang cocok untuk daily use.',
+    image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400',
+    type: 'preloved',
+    price: 350000,
+    quantity: 2
+  },
+  {
+    id: 8,
+    name: 'Gucci Bloom',
+    brand: 'Gucci',
+    categoryId: 2,
+    description: 'Parfum preloved kondisi 85% masih penuh. Aroma floral yang elegant dan feminine.',
+    image: 'https://images.unsplash.com/photo-1585232569525-f087bd9dae8e?w=400',
+    type: 'preloved',
+    price: 400000,
+    quantity: 1
+  },
+  // BNIB Products
+  {
+    id: 9,
+    name: 'Dior Fahrenheit',
+    brand: 'Dior',
+    categoryId: 1,
+    description: 'BNIB - Brand New In Box. Parfum klasik pria dengan signature floral notes.',
+    image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400',
+    type: 'bnib',
+    price: 1650000,
+    quantity: 4
+  },
 ];
 
 // Initialize storage with default data
@@ -217,12 +294,11 @@ export const getProducts = () => {
   const products = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
   if (products) {
     const parsedProducts = JSON.parse(products);
-    // Add notes, quantity and stock fallback for existing products
+    // Add notes and quantity fallback for existing products
     return parsedProducts.map(p => ({
       ...p,
       notes: p.notes || { top: '', middle: '', base: '' },
-      quantity: p.quantity !== undefined ? p.quantity : 1,
-      stock: p.stock || { "2": 1, "5": 1, "10": 1 }
+      quantity: p.quantity !== undefined ? p.quantity : 1
     }));
   }
   return initialProducts;
