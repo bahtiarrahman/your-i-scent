@@ -102,34 +102,8 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Mobile Bottom Nav - only shows below xl */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 xl:hidden">
-        <div className="flex justify-around py-2">
-          <Link to="/admin" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-600">
-            <Package className="w-5 h-5" />
-            <span className="text-xs">Home</span>
-          </Link>
-          <Link to="/admin/produk" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-600">
-            <Package className="w-5 h-5" />
-            <span className="text-xs">Produk</span>
-          </Link>
-          <Link to="/admin/pesanan" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-600">
-            <ShoppingCart className="w-5 h-5" />
-            <span className="text-xs">Order</span>
-          </Link>
-          <Link to="/admin/pembayaran" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-600">
-            <Settings className="w-5 h-5" />
-            <span className="text-xs">Bayar</span>
-          </Link>
-          <Link to="/admin/brand" className="flex flex-col items-center gap-1 px-3 py-2 text-gray-600">
-            <Tag className="w-5 h-5" />
-            <span className="text-xs">Brand</span>
-          </Link>
-        </div>
-      </div>
-
       {/* Main Content */}
-      <main className="flex-1 xl:ml-64 p-4 xl:p-8 pt-20 xl:pt-8 pb-24 xl:pb-8 overflow-auto">
+      <main className="flex-1 xl:ml-64 p-4 xl:p-8 pt-20 xl:pt-8 overflow-auto">
         <Outlet />
       </main>
     </div>
